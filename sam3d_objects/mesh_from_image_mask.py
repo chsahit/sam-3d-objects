@@ -6,7 +6,9 @@ os.environ["CUDA_HOME"] = os.environ.get("CONDA_PREFIX", "")
 os.environ["LIDRA_SKIP_INIT"] = "true"
 
 # import inference code
-sys.path.append("notebook")
+# Get the path to the sam-3d-objects root directory (parent of sam3d_objects)
+_package_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(_package_root, "notebook"))
 from inference import load_image, load_mask, check_hydra_safety, WHITELIST_FILTERS, BLACKLIST_FILTERS
 from omegaconf import OmegaConf
 from hydra.utils import instantiate
@@ -73,7 +75,9 @@ def mesh_from_image_mask(image_path: str, mask_path: str, model: Optional[Infere
 
     if model is None:
         tag = "hf"
-        config_path = f"checkpoints/{tag}/pipeline.yaml"
+        # Use absolute path to checkpoints directory in sam-3d-objects root
+        _package_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        config_path = os.path.join(_package_root, f"checkpoints/{tag}/pipeline.yaml")
         print("Loading model with sequential pipeline (memory-efficient mode)...")
         model = InferenceSequential(config_path, compile=False)
 
