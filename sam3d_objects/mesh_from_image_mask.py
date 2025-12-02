@@ -22,12 +22,17 @@ from sam3d_objects.pipeline.inference_pipeline_pointmap_sequential import Infere
 class InferenceSequential:
     """Sequential inference class that loads models one at a time to reduce memory usage."""
 
-    def __init__(self, config_file: str, compile: bool = False):
+    def __init__(self, config_file: str, compile: bool = False, device: str = "cuda"):
         # load inference pipeline
         config = OmegaConf.load(config_file)
         config.rendering_engine = "pytorch3d"  # overwrite to disable nvdiffrast
         config.compile_model = compile
+        config.device = device  # set device for the pipeline
         config.workspace_dir = os.path.dirname(config_file)
+
+        # Set device for depth model if it exists
+        if "depth_model" in config and config.depth_model is not None:
+            config.depth_model.device = device
 
         # Override _target_ to use sequential pipeline
         config._target_ = "sam3d_objects.pipeline.inference_pipeline_pointmap_sequential.InferencePipelinePointMapSequential"
@@ -66,7 +71,7 @@ class InferenceSequential:
         )
 
 
-def mesh_from_image_mask(image_path: str, mask_path: str, model: Optional[InferenceSequential] = None, output_path: Optional[str] = None, seed: int = 42) -> None:
+def mesh_from_image_mask(image_path: str, mask_path: str, model: Optional[InferenceSequential] = None, output_path: Optional[str] = None, seed: int = 42, device: str = "cuda") -> None:
     if output_path is None:
         # Generate output path from image path: "/path/to/foo.png" -> "/path/to/completed_foo.ply"
         dir_name = os.path.dirname(image_path)
@@ -79,7 +84,7 @@ def mesh_from_image_mask(image_path: str, mask_path: str, model: Optional[Infere
         _package_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         config_path = os.path.join(_package_root, f"checkpoints/{tag}/pipeline.yaml")
         print("Loading model with sequential pipeline (memory-efficient mode)...")
-        model = InferenceSequential(config_path, compile=False)
+        model = InferenceSequential(config_path, compile=False, device=device)
 
     image = load_image(image_path)
     mask = load_mask(mask_path)

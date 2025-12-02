@@ -51,10 +51,11 @@ def _fill_holes(
         y, p = sphere_hammersley_sequence(i, num_views)
         yaws.append(y)
         pitchs.append(p)
-    yaws = torch.tensor(yaws).cuda()
-    pitchs = torch.tensor(pitchs).cuda()
+    device = verts.device
+    yaws = torch.tensor(yaws).to(device)
+    pitchs = torch.tensor(pitchs).to(device)
     radius = 2.0
-    fov = torch.deg2rad(torch.tensor(40)).cuda()
+    fov = torch.deg2rad(torch.tensor(40)).to(device)
     projection = utils3d.torch.perspective_from_fov_xy(fov, fov, 1, 3)
     views = []
     for yaw, pitch in zip(yaws, pitchs):
@@ -66,14 +67,14 @@ def _fill_holes(
                     torch.sin(pitch),
                 ]
             )
-            .cuda()
+            .to(device)
             .float()
             * radius
         )
         view = utils3d.torch.view_look_at(
             orig,
-            torch.tensor([0, 0, 0]).float().cuda(),
-            torch.tensor([0, 0, 1]).float().cuda(),
+            torch.tensor([0, 0, 0]).float().to(device),
+            torch.tensor([0, 0, 1]).float().to(device),
         )
         views.append(view)
     views = torch.stack(views, dim=0)
@@ -284,6 +285,7 @@ def postprocess_mesh(
     fill_holes_num_views: int = 1000,
     debug: bool = False,
     verbose: bool = False,
+    device: str = "cuda",
 ):
     """
     Postprocess a mesh by simplifying, removing invisible faces, and removing isolated pieces.
@@ -321,8 +323,8 @@ def postprocess_mesh(
     # Remove invisible faces
     if fill_holes:
         vertices, faces = (
-            torch.tensor(vertices).cuda(),
-            torch.tensor(faces.astype(np.int32)).cuda(),
+            torch.tensor(vertices).to(device),
+            torch.tensor(faces.astype(np.int32)).to(device),
         )
         vertices, faces = _fill_holes(
             vertices,
@@ -627,6 +629,7 @@ def to_glb(
             fill_holes_num_views=1000,
             debug=debug,
             verbose=verbose,
+            device=app_rep.device,
         )
 
     if with_texture_baking:

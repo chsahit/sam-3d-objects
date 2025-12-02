@@ -107,7 +107,7 @@ def render(
         subpixel_offset = torch.zeros(
             (int(viewpoint_camera.image_height), int(viewpoint_camera.image_width), 2),
             dtype=torch.float32,
-            device="cuda",
+            device=means3D.device,
         )
 
         # Set up rasterization configuration
@@ -117,7 +117,7 @@ def render(
         # Create zero tensor. We will use it to make pytorch return gradients of the 2D (screen-space) means
         screenspace_points = (
             torch.zeros_like(
-                pc.get_xyz, dtype=pc.get_xyz.dtype, requires_grad=True, device="cuda"
+                pc.get_xyz, dtype=pc.get_xyz.dtype, requires_grad=True, device=means3D.device
             )
             + 0
         )
@@ -262,12 +262,12 @@ class GaussianRenderer:
         ssaa = self.rendering_options["ssaa"]
 
         if self.rendering_options["bg_color"] == "random":
-            self.bg_color = torch.zeros(3, dtype=torch.float32, device="cuda")
+            self.bg_color = torch.zeros(3, dtype=torch.float32, device=gausssian.device)
             if np.random.rand() < 0.5:
                 self.bg_color += 1
         else:
             self.bg_color = torch.tensor(
-                self.rendering_options["bg_color"], dtype=torch.float32, device="cuda"
+                self.rendering_options["bg_color"], dtype=torch.float32, device=gausssian.device
             )
 
         view = extrinsics

@@ -11,7 +11,7 @@ from ..modules import sparse as sp
 from .random_utils import sphere_hammersley_sequence
 
 
-def yaw_pitch_r_fov_to_extrinsics_intrinsics(yaws, pitchs, rs, fovs):
+def yaw_pitch_r_fov_to_extrinsics_intrinsics(yaws, pitchs, rs, fovs, device="cuda"):
     is_list = isinstance(yaws, list)
     if not is_list:
         yaws = [yaws]
@@ -23,9 +23,9 @@ def yaw_pitch_r_fov_to_extrinsics_intrinsics(yaws, pitchs, rs, fovs):
     extrinsics = []
     intrinsics = []
     for yaw, pitch, r, fov in zip(yaws, pitchs, rs, fovs):
-        fov = torch.deg2rad(torch.tensor(float(fov))).cuda()
-        yaw = torch.tensor(float(yaw)).cuda()
-        pitch = torch.tensor(float(pitch)).cuda()
+        fov = torch.deg2rad(torch.tensor(float(fov))).to(device)
+        yaw = torch.tensor(float(yaw)).to(device)
+        pitch = torch.tensor(float(pitch)).to(device)
         orig = (
             torch.tensor(
                 [
@@ -33,13 +33,13 @@ def yaw_pitch_r_fov_to_extrinsics_intrinsics(yaws, pitchs, rs, fovs):
                     torch.cos(yaw) * torch.cos(pitch),
                     torch.sin(pitch),
                 ]
-            ).cuda()
+            ).to(device)
             * r
         )
         extr = utils3d.torch.extrinsics_look_at(
             orig,
-            torch.tensor([0, 0, 0]).float().cuda(),
-            torch.tensor([0, 0, 1]).float().cuda(),
+            torch.tensor([0, 0, 0]).float().to(device),
+            torch.tensor([0, 0, 1]).float().to(device),
         )
         intr = utils3d.torch.intrinsics_from_fov_xy(fov, fov)
         extrinsics.append(extr)

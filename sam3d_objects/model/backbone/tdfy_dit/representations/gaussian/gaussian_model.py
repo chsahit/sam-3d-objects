@@ -23,6 +23,7 @@ class Gaussian:
             "scaling_bias": scaling_bias,
             "opacity_bias": opacity_bias,
             "scaling_activation": scaling_activation,
+            "device": device,
         }
 
         self.sh_degree = sh_degree
@@ -59,12 +60,12 @@ class Gaussian:
 
         self.scale_bias = self.inverse_scaling_activation(
             torch.tensor(self.scaling_bias)
-        ).cuda()
-        self.rots_bias = torch.zeros((4)).cuda()
+        ).to(self.device)
+        self.rots_bias = torch.zeros((4)).to(self.device)
         self.rots_bias[0] = 1
         self.opacity_bias = self.inverse_opacity_activation(
             torch.tensor(self.opacity_bias)
-        ).cuda()
+        ).to(self.device)
 
     @staticmethod
     def build_covariance_from_scaling_rotation(scaling, scaling_modifier, rotation):

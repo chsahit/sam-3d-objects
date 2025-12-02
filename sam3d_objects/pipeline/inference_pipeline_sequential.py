@@ -272,7 +272,7 @@ class InferencePipelineSequential:
         model = instantiate(config)
 
         if ckpt_path.endswith(".safetensors"):
-            state_dict = load_file(ckpt_path, device="cuda")
+            state_dict = load_file(ckpt_path, device=str(device))
             if state_dict_fn is not None:
                 state_dict = state_dict_fn(state_dict)
             model.load_state_dict(state_dict, strict=False)
@@ -383,10 +383,12 @@ class InferencePipelineSequential:
     def init_slat_decoder_mesh(
         self, slat_decoder_mesh_config_path, slat_decoder_mesh_ckpt_path
     ):
+        config = OmegaConf.load(
+            os.path.join(self.workspace_dir, slat_decoder_mesh_config_path)
+        )
+        config.device = str(self.device)
         return self.instantiate_and_load_from_pretrained(
-            OmegaConf.load(
-                os.path.join(self.workspace_dir, slat_decoder_mesh_config_path)
-            ),
+            config,
             os.path.join(self.workspace_dir, slat_decoder_mesh_ckpt_path),
             device=self.device,
             state_dict_key=None,
