@@ -321,6 +321,10 @@ class InferencePipelinePointMapSequential(InferencePipelineSequential):
             ss_return_dict["scale"] = ss_return_dict["scale"] * ss_return_dict["downsample_factor"]
 
             if stage1_only:
+                # Cleanup: unload condition embedders at the end
+                logger.info("Unloading condition embedders...")
+                self._unload_models("ss_condition_embedder", "slat_condition_embedder")
+
                 logger.info("Finished!")
                 ss_return_dict["voxel"] = ss_return_dict["coords"][:, 1:] / 64 - 0.5
                 return {
@@ -363,6 +367,10 @@ class InferencePipelinePointMapSequential(InferencePipelineSequential):
                 logger.error(
                     f"Error during layout post optimization: {e}", exc_info=True
                 )
+
+            # Cleanup: unload condition embedders at the end
+            logger.info("Unloading condition embedders...")
+            self._unload_models("ss_condition_embedder", "slat_condition_embedder")
 
             # glb.export("sample.glb")
             logger.info("Finished!")

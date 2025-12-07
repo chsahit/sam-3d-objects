@@ -512,6 +512,10 @@ class InferencePipelineSequential:
                 logger.info(f"Rescaling scale by {ss_return_dict['downsample_factor']}")
                 ss_return_dict["scale"] = ss_return_dict["scale"] * ss_return_dict["downsample_factor"]
             if stage1_only:
+                # Cleanup: unload condition embedders at the end
+                logger.info("Unloading condition embedders...")
+                self._unload_models("ss_condition_embedder", "slat_condition_embedder")
+
                 logger.info("Finished!")
                 ss_return_dict["voxel"] = ss_return_dict["coords"][:, 1:] / 64 - 0.5
                 return ss_return_dict
@@ -529,6 +533,11 @@ class InferencePipelineSequential:
             outputs = self.postprocess_slat_output(
                 outputs, with_mesh_postprocess, with_texture_baking, use_vertex_color
             )
+
+            # Cleanup: unload condition embedders at the end
+            logger.info("Unloading condition embedders...")
+            self._unload_models("ss_condition_embedder", "slat_condition_embedder")
+
             logger.info("Finished!")
 
             return {
@@ -747,9 +756,9 @@ class InferencePipelineSequential:
 
         ss_generator.inference_steps = prev_inference_steps
 
-        # Unload SS models
-        logger.info("Unloading sparse structure models...")
-        self._unload_models("ss_generator", "ss_decoder", "ss_condition_embedder")
+        # Unload SS models (keep condition embedder in memory for reuse)
+        logger.info("Unloading sparse structure models (keeping condition embedder)...")
+        self._unload_models("ss_generator", "ss_decoder")
 
         return return_dict
 
@@ -806,9 +815,9 @@ class InferencePipelineSequential:
 
         slat_generator.inference_steps = prev_inference_steps
 
-        # Unload SLAT models
-        logger.info("Unloading SLAT models...")
-        self._unload_models("slat_generator", "slat_condition_embedder")
+        # Unload SLAT models (keep condition embedder in memory for reuse)
+        logger.info("Unloading SLAT models (keeping condition embedder)...")
+        self._unload_models("slat_generator")
 
         return slat
 
