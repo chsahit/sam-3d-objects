@@ -543,7 +543,8 @@ class InferencePipeline:
                 outputs["gaussian"][0],
                 outputs["mesh"][0],
                 # Optional parameters
-                simplify=0.95,  # Ratio of triangles to remove in the simplification process
+                simplify=0.6,  # Ratio of faces to KEEP (lower = smaller file)
+                fill_holes=False,  # Disable hole filling to avoid nvdiffrast compilation
                 texture_size=1024,  # Size of the texture used for the GLB
                 verbose=False,
                 with_mesh_postprocess=with_mesh_postprocess,

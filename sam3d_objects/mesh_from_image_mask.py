@@ -62,7 +62,7 @@ class InferenceSequential:
             None,
             seed,
             stage1_only=False,
-            with_mesh_postprocess=False,
+            with_mesh_postprocess=True,  # Enable mesh simplification
             with_texture_baking=False,
             with_layout_postprocess=True,
             use_vertex_color=True,
