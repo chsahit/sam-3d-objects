@@ -615,6 +615,9 @@ def to_glb(
     faces = mesh.faces.cpu().numpy()
     vert_colors = mesh.vertex_attrs[:, :3].cpu().numpy()
 
+    # Store original vertices for color interpolation if needed
+    original_vertices = vertices.copy() if with_mesh_postprocess and use_vertex_color and not with_texture_baking else None
+
     if with_mesh_postprocess:
         # mesh postprocess
         vertices, faces = postprocess_mesh(
@@ -631,6 +634,14 @@ def to_glb(
             verbose=verbose,
             device=app_rep.device,
         )
+
+        # Interpolate vertex colors to simplified mesh if using vertex colors (without texture baking)
+        if use_vertex_color and not with_texture_baking and original_vertices is not None:
+            from scipy.spatial import cKDTree
+            # Find nearest original vertex for each new vertex
+            tree = cKDTree(original_vertices)
+            _, nearest_indices = tree.query(vertices)
+            vert_colors = vert_colors[nearest_indices]
 
     if with_texture_baking:
         # parametrize mesh
@@ -668,19 +679,21 @@ def to_glb(
     # rotate mesh (from z-up to y-up)
     vertices = vertices @ np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
 
-    if not with_mesh_postprocess and not with_texture_baking and use_vertex_color:
-        mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
-        mesh.visual.vertex_colors = vert_colors
-    else:
+    # Create mesh with appropriate coloring method
+    if with_texture_baking:
+        # Use baked texture
         mesh = trimesh.Trimesh(
             vertices,
             faces,
-            visual=(
-                trimesh.visual.TextureVisuals(uv=uvs, material=material)
-                if with_texture_baking
-                else None
-            ),
+            visual=trimesh.visual.TextureVisuals(uv=uvs, material=material),
         )
+    elif use_vertex_color:
+        # Use vertex colors (works with or without mesh postprocessing now)
+        mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+        mesh.visual.vertex_colors = vert_colors
+    else:
+        # No color
+        mesh = trimesh.Trimesh(vertices, faces)
 
     return mesh
 

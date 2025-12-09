@@ -74,7 +74,8 @@ def render_frames(
         renderer.rendering_options.far = options.get("far", 1.6)
         renderer.rendering_options.bg_color = options.get("bg_color", (0, 0, 0))
         renderer.rendering_options.ssaa = options.get("ssaa", 1)
-        renderer.rendering_options.backend = options.get("backend", "inria")
+        # Changed from "inria" to "gsplat" - inria backend requires diff_gaussian_rasterization which may not be installed
+        renderer.rendering_options.backend = options.get("backend", "gsplat")
         renderer.pipe.kernel_size = kwargs.get("kernel_size", 0.1)
         renderer.pipe.use_mip_gaussian = True
     elif isinstance(sample, MeshExtractResult):

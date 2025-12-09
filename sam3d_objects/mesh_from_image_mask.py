@@ -63,7 +63,7 @@ class InferenceSequential:
             seed,
             stage1_only=False,
             with_mesh_postprocess=True,  # Enable mesh simplification
-            with_texture_baking=False,
+            with_texture_baking=False,  # Use vertex colors instead (interpolated after mesh simplification)
             with_layout_postprocess=True,
             use_vertex_color=True,
             stage1_inference_steps=None,
